@@ -1,7 +1,9 @@
-from ast import For
+from ast import For, While
+from asyncio.windows_events import NULL
 from copyreg import constructor
 from hashlib import new
 from msilib.schema import Class
+from statistics import median
 from tkinter import *
 from tkinter import filedialog
 from PIL import Image
@@ -12,18 +14,48 @@ import numpy as np
 import os
 
 instanciasImagen = []
+image = []
 
 class Instancia:
-  def __init__(self, x, y) -> None:
+  def __init__(self, x, y, media) -> None:
     self.clase = "N"
     self.valorX = x
     self.valorY = y
+    self.mediaR = media[0]
+    self.mediaG = media[1]
+    self.mediaB = media[2]
+    # self.desviacion = desviacion
+
+def obtenerMedia(xInstancia,yInstancia):
+  valorTotalR = []
+  valorTotalG = []
+  valorTotalB = []
+  xPixel = xInstancia*10
+  yPixel = yInstancia*10
+  filas = xPixel
+  columnas = yPixel
+  while filas < xPixel+10:
+    while columnas < yPixel+10:
+      (b, g, r) = image[filas, columnas]
+      # print("Pixel at ({}, {}) - Red: {}, Green: {}, Blue: {}".format(filas,columnas,r,g, b))
+      valorTotalR.append(r)
+      valorTotalG.append(g)
+      valorTotalB.append(b)
+      columnas += 1
+    if columnas >= yPixel+10:
+      columnas = yPixel
+    filas+=1
+  mediaR = np.mean(valorTotalR)
+  mediaG = np.mean(valorTotalG)
+  mediaB = np.mean(valorTotalB)
+  return (mediaR, mediaG, mediaB)
 
 
 def guardar_datos():
+  # Se guarda la información en el archivo
   file = open("./datos/etiquetado.txt", "a")
   for instancia in instanciasImagen:
-    file.write(instancia.clase + "\n")
+    file.write(instancia.clase + "," + str(instancia.mediaR) + "," + str(instancia.mediaG)+ "," + str(instancia.mediaB) + "\n")
   file.write(os.linesep)
   file.close()
   # vaciar arreglo de instancias imagen
@@ -37,12 +69,12 @@ def elegir_imagen():
         ("image", ".jpg")])
 
     if len(path_image) > 0:
-        global image
+        # global image
 
         # Leer la imagen de entrada y la redimensionamos
+        global image
         image = cv2.imread(path_image)
         # image= imutils.resize(image, height=250)
-
         # Para visualizar la imagen de entrada en la GUI
         imageToShow= imutils.resize(image, width=150)
         imageToShow = cv2.cvtColor(imageToShow, cv2.COLOR_BGR2RGB)
@@ -81,12 +113,11 @@ def elegir_imagen():
         yPos = 0
         while( xPos < 25 ):
           while( yPos < 25 ):
-            instanciasImagen.append(Instancia(xPos, yPos))
+            instanciasImagen.append(Instancia(xPos, yPos, obtenerMedia(xPos, yPos)))
             yPos += 1
           if yPos >= 24:
             yPos = 0
           xPos+= 1
-        
 
         cv2.namedWindow('Imagen')
         cv2.setMouseCallback('Imagen',dibujando)
@@ -110,30 +141,26 @@ def dibujando(event,x,y,flags,param):
         cv2.circle(imagen,(x,y),1,(255,255,255),2)
         xLeft = x
         yLeft = y
-        print(xLeft)
-        print(yLeft)
         xInstancia = int(xLeft/10)
         yInstancia = int(yLeft/10)
         #izquierdo humo
         for instancia in instanciasImagen:
           if instancia.valorX == xInstancia and instancia.valorY == yInstancia:
             instancia.clase = "H"
-            print(instancia.clase, instancia.valorX, instancia.valorY)
+            # print(instancia.clase, instancia.valorX, instancia.valorY, instancia.pixelX, instancia.pixelY)
 
 
     if event == cv2.EVENT_RBUTTONDOWN:
         cv2.circle(imagen,(x,y),1,(0,0,255),2)
         xRight = x
         yRight = y
-        print(xRight)
-        print(yRight)
         #derecho incendio
         xInstancia = int(xRight/10)
         yInstancia = int(yRight/10)
         for instancia in instanciasImagen:
           if instancia.valorX == xInstancia and instancia.valorY == yInstancia:
             instancia.clase = "I"
-            print(instancia.clase, instancia.valorX, instancia.valorY)
+            # print(instancia.clase, instancia.valorX, instancia.valorY, instancia.pixelX, instancia.pixelY)
 
 
 root = Tk()
