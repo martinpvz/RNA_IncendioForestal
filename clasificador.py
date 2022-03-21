@@ -17,14 +17,40 @@ instanciasImagen = []
 image = []
 
 class Instancia:
-  def __init__(self, x, y, media) -> None:
+  def __init__(self, x, y, media, desviacion) -> None:
     self.clase = "N"
     self.valorX = x
     self.valorY = y
     self.mediaR = media[0]
     self.mediaG = media[1]
     self.mediaB = media[2]
-    # self.desviacion = desviacion
+    self.desviacionR = desviacion[0]
+    self.desviacionG = desviacion[1]
+    self.desviacionB = desviacion[2]
+
+def obtenerDesviacion(xInstancia, yInstancia):
+  valorTotalR = []
+  valorTotalG = []
+  valorTotalB = []
+  xPixel = xInstancia*10
+  yPixel = yInstancia*10
+  filas = xPixel
+  columnas = yPixel
+  while filas < xPixel+10:
+    while columnas < yPixel+10:
+      (b, g, r) = image[filas, columnas]
+      # print("Pixel at ({}, {}) - Red: {}, Green: {}, Blue: {}".format(filas,columnas,r,g, b))
+      valorTotalR.append(r)
+      valorTotalG.append(g)
+      valorTotalB.append(b)
+      columnas += 1
+    if columnas >= yPixel+10:
+      columnas = yPixel
+    filas+=1
+  desviacionR = round(np.std(valorTotalR),2)
+  desviacionG = round(np.std(valorTotalG),2)
+  desviacionB = round(np.std(valorTotalB),2)
+  return (desviacionR, desviacionG, desviacionB)
 
 def obtenerMedia(xInstancia,yInstancia):
   valorTotalR = []
@@ -48,6 +74,7 @@ def obtenerMedia(xInstancia,yInstancia):
   mediaR = np.mean(valorTotalR)
   mediaG = np.mean(valorTotalG)
   mediaB = np.mean(valorTotalB)
+  # print(mediaR, mediaG, mediaB)
   return (mediaR, mediaG, mediaB)
 
 
@@ -55,7 +82,7 @@ def guardar_datos():
   # Se guarda la información en el archivo
   file = open("./datos/etiquetado.txt", "a")
   for instancia in instanciasImagen:
-    file.write(instancia.clase + "," + str(instancia.mediaR) + "," + str(instancia.mediaG)+ "," + str(instancia.mediaB) + "\n")
+    file.write(instancia.clase + "," + str(instancia.mediaR) + "," + str(instancia.mediaG)+ "," + str(instancia.mediaB) + "," + str(instancia.desviacionR) + "," + str(instancia.desviacionG) + "," + str(instancia.desviacionB) + "\n")
   file.write(os.linesep)
   file.close()
   # vaciar arreglo de instancias imagen
@@ -113,7 +140,7 @@ def elegir_imagen():
         yPos = 0
         while( xPos < 25 ):
           while( yPos < 25 ):
-            instanciasImagen.append(Instancia(xPos, yPos, obtenerMedia(xPos, yPos)))
+            instanciasImagen.append(Instancia(xPos, yPos, obtenerMedia(xPos, yPos), obtenerDesviacion(xPos, yPos)))
             yPos += 1
           if yPos >= 24:
             yPos = 0
