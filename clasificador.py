@@ -1,8 +1,13 @@
 from ast import For, While
-from asyncio.windows_events import NULL
+# from asyncio.windows_events import NULL
+# from asyncio.windows_events import NULL
 from copyreg import constructor
+from email.mime import base
 from hashlib import new
-from msilib.schema import Class
+# from msilib.schema import Class
+from skimage.feature import graycomatrix, graycoprops
+from scipy.stats import entropy
+from skimage import io, color, img_as_ubyte
 from statistics import median
 from tkinter import *
 from tkinter import filedialog
@@ -17,7 +22,7 @@ instanciasImagen = []
 image = []
 
 class Instancia:
-  def __init__(self, x, y, media, desviacion) -> None:
+  def __init__(self, x, y, media, desviacion, contraste, disimilaridad, homogeneiedad, energia, correlacion, entropia) -> None:
     self.clase = "N"
     self.valorX = x
     self.valorY = y
@@ -27,6 +32,27 @@ class Instancia:
     self.desviacionR = desviacion[0]
     self.desviacionG = desviacion[1]
     self.desviacionB = desviacion[2]
+    self.contraste0 = contraste[0]
+    self.contraste45 = contraste[1]
+    self.contraste90 = contraste[2]
+    self.contraste135 = contraste[3]
+    self.dissimilarity0 = disimilaridad[0]
+    self.dissimilarity45 = disimilaridad[1]
+    self.dissimilarity90 = disimilaridad[2]
+    self.dissimilarity135 = disimilaridad[3]
+    self.homogeneidad0 = homogeneiedad[0]
+    self.homogeneidad45 = homogeneiedad[1]
+    self.homogeneidad90 = homogeneiedad[2]
+    self.homogeneidad135 = homogeneiedad[3]
+    self.energia0 = energia[0]
+    self.energia45 = energia[1]
+    self.energia90 = energia[2]
+    self.energia135 = energia[3]
+    self.correlacion0 = correlacion[0]
+    self.correlacion45 = correlacion[1]
+    self.correlacion90 = correlacion[2]
+    self.correlacion135 = correlacion[3]
+    self.entropia = entropia
 
 def obtenerDesviacion(xInstancia, yInstancia):
   valorTotalR = []
@@ -47,9 +73,9 @@ def obtenerDesviacion(xInstancia, yInstancia):
     if columnas >= yPixel+10:
       columnas = yPixel
     filas+=1
-  desviacionR = round(np.std(valorTotalR),2)
-  desviacionG = round(np.std(valorTotalG),2)
-  desviacionB = round(np.std(valorTotalB),2)
+  desviacionR = round(np.std(valorTotalR),4)
+  desviacionG = round(np.std(valorTotalG),4)
+  desviacionB = round(np.std(valorTotalB),4)
   return (desviacionR, desviacionG, desviacionB)
 
 def obtenerMedia(xInstancia,yInstancia):
@@ -77,13 +103,51 @@ def obtenerMedia(xInstancia,yInstancia):
   # print(mediaR, mediaG, mediaB)
   return (mediaR, mediaG, mediaB)
 
+def obtener_matriz(y, x):
+  global image
+  imagePartition = image[y:y+10, x:x+10]
+  gray = cv2.cvtColor(imagePartition, cv2.COLOR_BGR2GRAY)
+  matrix_coocurrence = graycomatrix(gray, [1], [0, 45, 90, 135], levels=256, normed=True, symmetric=True)
+  return matrix_coocurrence
+
+def contrast_feature(matrix_coocurrence):
+    contrast = graycoprops(matrix_coocurrence, 'contrast')
+    return contrast[0]
+
+def dissimilarity_feature(matrix_coocurrence):
+    dissimilarity = graycoprops(matrix_coocurrence, 'dissimilarity')    
+    return dissimilarity[0]
+
+def homogeneity_feature(matrix_coocurrence):
+    homogeneity = graycoprops(matrix_coocurrence, 'homogeneity')
+    return homogeneity[0]
+
+def energy_feature(matrix_coocurrence):
+    energy = graycoprops(matrix_coocurrence, 'energy')
+    return energy[0]
+
+def asm_feature(matrix_coocurrence):
+    asm = graycoprops(matrix_coocurrence, 'asm')
+    return asm[0]
+
+def correlation_feature(matrix_coocurrence):
+    correlation = graycoprops(matrix_coocurrence, 'correlation')
+    return correlation[0]
+
+def entropy_feature(y,x):
+  global image
+  imagePartition = image[y:y+10, x:x+10]
+  # entropia = entropy(gray, base=2)
+  gray = cv2.cvtColor(imagePartition, cv2.COLOR_BGR2GRAY)
+  glcm = np.squeeze(graycomatrix(gray, distances=[1], angles=[0], symmetric=True, normed=True))
+  entropy = -np.sum(glcm*np.log2(glcm + (glcm==0)))
+  return entropy
 
 def guardar_datos():
   # Se guarda la información en el archivo
   file = open("./datos/etiquetado.txt", "a")
   for instancia in instanciasImagen:
-    file.write(instancia.clase + "," + str(instancia.mediaR) + "," + str(instancia.mediaG)+ "," + str(instancia.mediaB) + "," + str(instancia.desviacionR) + "," + str(instancia.desviacionG) + "," + str(instancia.desviacionB) + "\n")
-  file.write(os.linesep)
+    file.write(str(instancia.mediaR) + "," + str(instancia.mediaG)+ "," + str(instancia.mediaB) + "," + str(instancia.desviacionR) + "," + str(instancia.desviacionG) + "," + str(instancia.desviacionB) + "," + str(round(instancia.contraste0,4)) + "," + str(round(instancia.contraste45,4)) + "," + str(round(instancia.contraste90,4)) + "," + str(round(instancia.contraste135,4)) + "," + str(round(instancia.dissimilarity0,4)) + "," + str(round(instancia.dissimilarity45,4)) + "," + str(round(instancia.dissimilarity90,4)) + "," + str(round(instancia.dissimilarity135,4)) + "," + str(round(instancia.homogeneidad0,4)) + "," + str(round(instancia.homogeneidad45,4)) + "," + str(round(instancia.homogeneidad90,4)) + "," + str(round(instancia.homogeneidad135,4)) + "," + str(round(instancia.energia0,4)) + "," + str(round(instancia.energia45,4)) + "," + str(round(instancia.energia90,4)) + "," + str(round(instancia.energia135,4)) + "," + str(round(instancia.correlacion0,4)) + "," + str(round(instancia.correlacion45,4)) + "," + str(round(instancia.correlacion90,4)) + "," + str(round(instancia.correlacion135,4)) + "," + str(round(instancia.entropia, 4)) + "," + instancia.clase + "\n")
   file.close()
   # vaciar arreglo de instancias imagen
   instanciasImagen.clear()
@@ -101,6 +165,16 @@ def elegir_imagen():
         # Leer la imagen de entrada y la redimensionamos
         global image
         image = cv2.imread(path_image)
+        imagePartition = image[0:10, 0:10]
+        gray = cv2.cvtColor(imagePartition, cv2.COLOR_BGR2GRAY)
+        glcm = np.squeeze(graycomatrix(gray, distances=[1], angles=[0,45,90,135], symmetric=True, normed=True))
+        entropy = -np.sum(glcm*np.log2(glcm + (glcm==0)))
+        # matrix = obtener_matriz(0,0)
+        print(entropy)
+        # print(dissimilarity_feature(matrix))
+        # print(homogeneity_feature(matrix))
+        # print(energy_feature(matrix))
+        # print(correlation_feature(matrix))
         # image= imutils.resize(image, height=250)
         # Para visualizar la imagen de entrada en la GUI
         imageToShow= imutils.resize(image, width=150)
@@ -140,7 +214,8 @@ def elegir_imagen():
         yPos = 0
         while( xPos < 25 ):
           while( yPos < 25 ):
-            instanciasImagen.append(Instancia(xPos, yPos, obtenerMedia(xPos, yPos), obtenerDesviacion(xPos, yPos)))
+            matriz = obtener_matriz(yPos*10, xPos*10)
+            instanciasImagen.append(Instancia(xPos, yPos, obtenerMedia(xPos, yPos), obtenerDesviacion(xPos, yPos), contrast_feature(matriz), dissimilarity_feature(matriz), homogeneity_feature(matriz), energy_feature(matriz), correlation_feature(matriz), entropy_feature(yPos*10, xPos*10)))
             yPos += 1
           if yPos >= 24:
             yPos = 0

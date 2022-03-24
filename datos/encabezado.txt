@@ -1,0 +1,30 @@
+@relation incendio_forestal
+@attribute 'mediaR' numeric
+@attribute 'mediaG' numeric
+@attribute 'mediaB' numeric
+@attribute 'desviacionR' numeric
+@attribute 'desviacionG' numeric
+@attribute 'desviacionB' numeric
+@attribute 'contraste0' numeric
+@attribute 'contraste45' numeric
+@attribute 'contraste90' numeric
+@attribute 'contraste135' numeric
+@attribute 'dissimilarity0' numeric
+@attribute 'dissimilarity45' numeric
+@attribute 'dissimilarity90' numeric
+@attribute 'dissimilarity135' numeric
+@attribute 'homogeneidad0' numeric
+@attribute 'homogeneidad45' numeric
+@attribute 'homogeneidad90' numeric
+@attribute 'homogeneidad135' numeric
+@attribute 'energia0' numeric
+@attribute 'energia45' numeric
+@attribute 'energia90' numeric
+@attribute 'energia135' numeric
+@attribute 'correlacion0' numeric
+@attribute 'correlacion45' numeric
+@attribute 'correlacion90' numeric
+@attribute 'correlacion135' numeric
+@attribute 'entropia' numeric
+@attribute 'class' { H, I, N }
+@data
