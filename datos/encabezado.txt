@@ -25,6 +25,9 @@
 @attribute 'correlacion45' numeric
 @attribute 'correlacion90' numeric
 @attribute 'correlacion135' numeric
-@attribute 'entropia' numeric
+@attribute 'asm0' numeric
+@attribute 'asm45' numeric
+@attribute 'asm90' numeric
+@attribute 'asm135' numeric
 @attribute 'class' { H, I, N }
 @data
